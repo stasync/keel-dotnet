@@ -7,6 +7,6 @@ namespace Keel.DependencyInjection.Factories.Internal
         public DefaultFactory(Type implementationType) : base(implementationType) { }
 
         public override object Produce() =>
-            Activator.CreateInstance(ImplementationType);
+            Activator.CreateInstance(ImplementationType, nonPublic: true);
     }
 }
