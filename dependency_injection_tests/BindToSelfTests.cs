@@ -83,7 +83,37 @@ namespace Keel.DependencyInjection.Tests
             Assert.IsType<SecondConcreteService>(service2);
         }
 
+        [Fact]
+        public void BindToSelf_InternalConstructor_CreatesInstance()
+        {
+            var binder = new ScopeBinder();
+            binder.BindToSelf<InternalConstructorService>();
+
+            var rootScope = new RootScope(binder.ToDependencyMap());
+            Assert.NotNull(rootScope.Provide<InternalConstructorService>());
+        }
+
+        [Fact]
+        public void BindToSelf_PrivateConstructor_CreatesInstance()
+        {
+            var binder = new ScopeBinder();
+            binder.BindToSelf<PrivateConstructorService>();
+
+            var rootScope = new RootScope(binder.ToDependencyMap());
+            Assert.NotNull(rootScope.Provide<PrivateConstructorService>());
+        }
+
         private sealed class ConcreteService;
+
+        private sealed class InternalConstructorService
+        {
+            internal InternalConstructorService() { }
+        }
+
+        private sealed class PrivateConstructorService
+        {
+            private PrivateConstructorService() { }
+        }
 
         private sealed class FirstConcreteService;
 

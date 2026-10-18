@@ -220,7 +220,7 @@ var greeter = scope.Provide<IGreeter>();
 Console.WriteLine(greeter.Greet("Alice"));
 ```
 
-Dependencies are filled into fields and auto-properties marked with `[Inject]`. Classes are created through their parameterless constructor.
+Dependencies are filled into fields and auto-properties marked with `[Inject]`. Classes are created through their parameterless constructor, which doesn't have to be public.
 
 ### Lifetimes
 
