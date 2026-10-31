@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -10,7 +10,8 @@ namespace Keel.Utils
     /// </summary>
     public static class TypeTraits
     {
-        private static readonly Dictionary<Type, bool> s_blittableValueCache = new();
+        // Concurrent, as the first call for a type may come from any thread - e.g. the static constructor of TypeInfo<T>.
+        private static readonly ConcurrentDictionary<Type, bool> s_blittableValueCache = new();
 
         /// <summary>
         /// Returns true, if type is blittable.
@@ -23,7 +24,9 @@ namespace Keel.Utils
                 return result;
 
             var isBlittable = CheckThroughPinnedHandle() && IsTypeBlittableRecursive(type);
-            s_blittableValueCache.Add(type, isBlittable);
+
+            // Another thread may have just cached the same type - with the same result, so either one may stay.
+            s_blittableValueCache.TryAdd(type, isBlittable);
             return isBlittable;
 
             // A quick check through pinning, should sometimes help to avoid recursion.

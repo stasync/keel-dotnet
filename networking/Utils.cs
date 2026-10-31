@@ -128,17 +128,19 @@ namespace Keel.Networking
             if (!IsValidUrl(urlParts[0]))
                 throw new InvalidOperationException($"Url leading part '{urlParts[0]}' is not a valid URL.");
 
+            // Trimmed into a copy - 'params' may well be the caller's own array.
+            var trimmedUrlParts = new string[urlParts.Length];
             for (var i = 0; i < urlParts.Length; i++)
             {
                 if (i == 0)
-                    urlParts[i] = urlParts[i].TrimEnd('/');
+                    trimmedUrlParts[i] = urlParts[i].TrimEnd('/');
                 else if (i == urlParts.Length - 1)
-                    urlParts[i] = urlParts[i].TrimStart('/');
+                    trimmedUrlParts[i] = urlParts[i].TrimStart('/');
                 else
-                    urlParts[i] = urlParts[i].Trim('/');
+                    trimmedUrlParts[i] = urlParts[i].Trim('/');
             }
 
-            var result = string.Join("/", urlParts);
+            var result = string.Join("/", trimmedUrlParts);
             if (!result.EndsWith('/'))
                 result += '/';
 

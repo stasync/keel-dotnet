@@ -115,7 +115,7 @@ namespace Keel.DependencyInjection
                 throw new InvalidOperationException($"Type '{implementationType!.FullName}' has to implement '{interfaceType.FullName}'.");
 
             if (!typeof(InstanceFactory).IsAssignableFrom(factoryType))
-                throw new InvalidOperationException($"Type '{factoryType!.FullName}' has to inherit '{interfaceType.FullName}'.");
+                throw new InvalidOperationException($"Type '{factoryType!.FullName}' has to inherit '{typeof(InstanceFactory).FullName}'.");
 
             BindInternal(interfaceType, implementationType, factoryType, behaviour);
         }
@@ -126,23 +126,17 @@ namespace Keel.DependencyInjection
 
         private void BindInternal(Type interfaceType, Type implementationType, Func<InstanceFactory> factoryInstanceBuilder, ImplementationBehaviour behaviour)
         {
-            if (!_interfaceToImplementationMap.TryAdd(interfaceType, implementationType))
-                throw new InvalidOperationException($"Interface '{interfaceType.FullName}' already registered for type '{implementationType.FullName}'.");
+            // Everything is validated before anything is registered, so a failed bind leaves the binder unchanged.
+            if (_interfaceToImplementationMap.TryGetValue(interfaceType, out var registeredImplementationType))
+                throw new InvalidOperationException($"Interface '{interfaceType.FullName}' already registered for type '{registeredImplementationType.FullName}'.");
 
-            if (!_implementationBehaviourTypeMap.TryAdd(implementationType, behaviour))
-            {
-                // TODO: Decide if the following has to be an intended behaviour, or it should not be allowed.
-                // Diagnostics - implementation behaviour is already registered.
-                // Could potentially happen in following scenarios:
-                // 1. When calling 'BindToAllImplementedInterfaces'.
-                // 2. When the same implementation is bound to different interfaces using 'Bind', with different behaviour provided as an argument.
-                var currentBehaviour = _implementationBehaviourTypeMap[implementationType];
-                if (currentBehaviour != behaviour)
-                    throw new InvalidOperationException($"Implementation '{implementationType.FullName}' is already bound to '{currentBehaviour}' behaviour, but new behaviour '{behaviour}' was requested.");
-            }
-
-            if (_factories.ContainsKey(implementationType))
-                return;
+            // TODO: Decide if the following has to be an intended behaviour, or it should not be allowed.
+            // Diagnostics - implementation behaviour is already registered.
+            // Could potentially happen in following scenarios:
+            // 1. When calling 'BindToAllImplementedInterfaces'.
+            // 2. When the same implementation is bound to different interfaces using 'Bind', with different behaviour provided as an argument.
+            if (_implementationBehaviourTypeMap.TryGetValue(implementationType, out var currentBehaviour) && currentBehaviour != behaviour)
+                throw new InvalidOperationException($"Implementation '{implementationType.FullName}' is already bound to '{currentBehaviour}' behaviour, but new behaviour '{behaviour}' was requested.");
 
             if (implementationType.IsInterface || implementationType.IsAbstract || implementationType.IsGenericType)
                 throw new InvalidOperationException($"Implementation of type '{implementationType.FullName}' couldn't be interface, static, abstract, or generic.");
@@ -150,7 +144,12 @@ namespace Keel.DependencyInjection
             if (!interfaceType.IsAssignableFrom(implementationType))
                 throw new InvalidOperationException($"Implementation of type '{implementationType.FullName}' should be inherited for '{interfaceType.FullName}'.");
 
-            _factories.Add(implementationType, factoryInstanceBuilder());
+            // Building the factory may throw as well, so it happens before anything is registered.
+            if (!_factories.ContainsKey(implementationType))
+                _factories.Add(implementationType, factoryInstanceBuilder());
+
+            _interfaceToImplementationMap.Add(interfaceType, implementationType);
+            _implementationBehaviourTypeMap.TryAdd(implementationType, behaviour);
         }
 
         private static InstanceFactory CreateFactoryInstance(Type factoryType, params object[] args)

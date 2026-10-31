@@ -1,6 +1,7 @@
 ﻿using Keel.Utils.Debug;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
 
 namespace Keel.Utils
@@ -171,7 +172,7 @@ namespace Keel.Utils
                 if (typeToParse == typeof(long))
                 {
                     // Check for long.
-                    if (long.TryParse(argument, out var parsedLong))
+                    if (long.TryParse(argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedLong))
                     {
                         result = parsedLong;
                         return true;
@@ -181,7 +182,7 @@ namespace Keel.Utils
                 if (typeToParse == typeof(ulong))
                 {
                     // Check for ulong.
-                    if (ulong.TryParse(argument, out var parsedULong))
+                    if (ulong.TryParse(argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedULong))
                     {
                         result = parsedULong;
                         return true;
@@ -195,9 +196,10 @@ namespace Keel.Utils
                 }
 
                 // Fall back to parsing any other numeric type.
-                if (double.TryParse(argument, out var parsedDouble))
+                // Invariant culture: a command line reads the same on every machine, '0.5' is never five.
+                if (double.TryParse(argument, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var parsedDouble))
                 {
-                    var convertedValue = Convert.ChangeType(parsedDouble, typeToParse);
+                    var convertedValue = Convert.ChangeType(parsedDouble, typeToParse, CultureInfo.InvariantCulture);
                     result = convertedValue;
                     return true;
                 }

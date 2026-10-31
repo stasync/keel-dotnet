@@ -79,6 +79,7 @@ namespace Keel.Networking.Udp
         private readonly Dictionary<uint, DateTime> _recentDisconnectsLookup = new();
 
         private DateTime _nextRecentDisconnectsPurgeTime;
+        private bool _disposed;
 
         public ReliableUdpServer(int maxConnections, int port, ushort protocolKey)
         {
@@ -96,7 +97,7 @@ namespace Keel.Networking.Udp
 
         public void Update()
         {
-            if (_protocol == null)
+            if (_disposed)
                 return;
 
             var currentReliabilityFailureCount = _protocol.ReliabilityFailureCount;
@@ -274,6 +275,13 @@ namespace Keel.Networking.Udp
             var connectionUid = _dataReader.ReadPackedUInt32();
             var validationUid = _dataReader.ReadPackedUInt32();
             var connectionSlot = _dataReader.ReadByte();
+
+            // The slot comes from the wire, so it has to be checked before it's used as an index.
+            if (connectionSlot >= _connectionSlots.Length)
+            {
+                UnexpectedClientAction(sender, $"Unexpected data - slot '{connectionSlot}' is out of range: '{messageCode}'");
+                return false;
+            }
 
             var slotConnection = _connectionSlots[connectionSlot];
             if (slotConnection == null)
@@ -487,9 +495,10 @@ namespace Keel.Networking.Udp
 
         public void Dispose()
         {
-            if (_protocol == null)
+            if (_disposed)
                 return;
 
+            _disposed = true;
             _protocol.Dispose();
             _connectionRequests.Clear();
         }
@@ -497,7 +506,7 @@ namespace Keel.Networking.Udp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void EnsureValid()
         {
-            if (_protocol == null)
+            if (_disposed)
                 throw new ObjectDisposedException(GetType().FullName);
         }
     }

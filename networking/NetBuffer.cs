@@ -171,16 +171,17 @@ namespace Keel.Networking
             if (sizeToAdd < 0)
                 throw new InvalidOperationException($"Size to add cannot be negative: '{sizeToAdd}'.");
 
-            if (Position + sizeToAdd < InternalBuffer.Length)
+            var requiredLength = Position + sizeToAdd;
+            if (requiredLength <= InternalBuffer.Length)
                 return;
 
-            var newLength = (int)Math.Ceiling(InternalBuffer.Length * GROWTH_FACTOR);
-            while (Position + sizeToAdd >= newLength)
-            {
+            // Never grows from less than the initial size - multiplying an empty buffer's length would never get anywhere.
+            var newLength = Math.Max(InternalBuffer.Length, INITIAL_SIZE);
+            while (newLength < requiredLength)
                 newLength = (int)Math.Ceiling(newLength * GROWTH_FACTOR);
-                if (newLength > BUFFER_SIZE_WARNING)
-                    Logger.LogWarning($"{GetType().FullName} size is '{newLength}' bytes!");
-            }
+
+            if (newLength > BUFFER_SIZE_WARNING)
+                Logger.LogWarning($"{GetType().FullName} size is '{newLength}' bytes!");
 
             var tmp = new byte[newLength];
             Buffer.BlockCopy(src: InternalBuffer, srcOffset: 0, dst: tmp, dstOffset: 0, count: Position);

@@ -8,21 +8,31 @@ namespace Keel.Networking.Udp.LowLevel.Simulators
     {
         /// <summary>
         /// Minimum packet delay in milliseconds.
+        /// Raises <see cref="PacketMaxDelayMs"/> along with it when needed, so the two can be set in either order.
         /// </summary>
         public float PacketMinDelayMs
         {
             get => _packetMinDelayMs;
-            set => _packetMinDelayMs = Math.Clamp(value, 0f, PacketMaxDelayMs);
+            set
+            {
+                _packetMinDelayMs = Math.Max(value, 0f);
+                _packetMaxDelayMs = Math.Max(_packetMaxDelayMs, _packetMinDelayMs);
+            }
         }
         private float _packetMinDelayMs = 100f;
 
         /// <summary>
         /// Maximum packet delay in milliseconds. Each packet is delayed by a random value between the minimum and this.
+        /// Lowers <see cref="PacketMinDelayMs"/> along with it when needed, so the two can be set in either order.
         /// </summary>
         public float PacketMaxDelayMs
         {
             get => _packetMaxDelayMs;
-            set => _packetMaxDelayMs = Math.Max(value, PacketMinDelayMs);
+            set
+            {
+                _packetMaxDelayMs = Math.Max(value, 0f);
+                _packetMinDelayMs = Math.Min(_packetMinDelayMs, _packetMaxDelayMs);
+            }
         }
         private float _packetMaxDelayMs = 200f;
 

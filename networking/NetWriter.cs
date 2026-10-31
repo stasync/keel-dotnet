@@ -11,10 +11,10 @@ namespace Keel.Networking
         private readonly NetBuffer _buffer = new();
         private readonly UTF8Encoding _encoding = new();
 
-        public short Position
+        public int Position
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => (short)_buffer.Position;
+            get => _buffer.Position;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -217,6 +217,9 @@ namespace Keel.Networking
             }
 
             var count = _encoding.GetByteCount(value);
+            if (count > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(value), $"String takes '{count}' bytes, but its length prefix can describe at most '{ushort.MaxValue}'.");
+
             var bytes = ArrayPool<byte>.Shared.Rent(count);
             try
             {
@@ -240,7 +243,7 @@ namespace Keel.Networking
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteBytesAndSize(byte[] buffer) =>
-            WriteBytesAndSize(buffer, buffer.Length);
+            WriteBytesAndSize(buffer, buffer?.Length ?? 0);
 
         public void WriteBytesAndSize(byte[] buffer, int count)
         {

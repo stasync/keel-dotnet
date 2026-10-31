@@ -179,6 +179,29 @@
             Assert.DoesNotContain(firstFromRoot, childInstances);
         }
 
+        [Fact]
+        public void EnumerateChildScopes_AfterChildDisposal_ExcludesIt()
+        {
+            var rootScope = new RootScope(new ScopeBinder().ToDependencyMap());
+            var disposedChild = rootScope.CreateChildScope(new ScopeBinder().ToDependencyMap());
+            var activeChild = rootScope.CreateChildScope(new ScopeBinder().ToDependencyMap());
+
+            disposedChild.Dispose();
+
+            var childScopes = rootScope.ToList();
+            Assert.Single(childScopes);
+            Assert.Contains(activeChild, childScopes);
+        }
+
+        [Fact]
+        public void EnumerateChildScopes_AfterDisposal_Throws()
+        {
+            var rootScope = new RootScope(new ScopeBinder().ToDependencyMap());
+            rootScope.Dispose();
+
+            Assert.Throws<ObjectDisposedException>(() => rootScope.ToList());
+        }
+
         private sealed class FirstService : IFirstService
         {
             [Inject]

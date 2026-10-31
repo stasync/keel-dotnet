@@ -354,16 +354,16 @@ Logger.LogError("Could not bind port");
 Logger.SetLogLevel(LogLevel.Warning); // hide info messages
 ```
 
-Nothing is printed until you choose where logs should go. `LogWorker` prints them to the console in color on a background thread, and can also save them to a file:
+Nothing is printed until you choose where logs should go. `LogWorker` prints them to the console in color on a background thread, and can also save them to a file in a folder you name:
 
 ```csharp
 using Keel.Utils.Threading;
 
-var log = LogWorker.BuildAndStart(WorkerScope.NewBackgroundThread, "logs/server.log");
+var log = LogWorker.BuildAndStart(WorkerScope.NewBackgroundThread, "logs");
 Logger.SetCustomOutput(log);
 ```
 
-Leave out the file path to log to the console only. To send logs anywhere else, implement `ILogOutput`.
+The folder is relative to the application directory, and each process writes its own file there, `app_<process id>.log`. Leave out the folder to log to the console only. To send logs anywhere else, implement `ILogOutput`.
 
 ### Background workers
 

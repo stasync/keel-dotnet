@@ -39,7 +39,7 @@ namespace Keel.Utils.Debug
         private const int FLUSH_BUFFER_SIZE = 64 * 1024; // flush when buffer reaches ~64KB
 
         private readonly ConcurrentQueue<ScheduledLog> _logQueue = new();
-        private readonly StreamWriter _fileWriter;
+        private StreamWriter _fileWriter;
         private readonly StringBuilder _fileBuffer = new();
         private readonly StringBuilder _logQueueBuffer = new();
         private DateTime _lastFlushTime = DateTime.MinValue;
@@ -152,6 +152,10 @@ namespace Keel.Utils.Debug
                     {
                         // Swallow exceptions during dispose.
                     }
+
+                    // Null disables file logging from here on, so neither the failure nor the buffered output for it keeps piling up.
+                    _fileWriter = null;
+                    _fileBuffer.Clear();
                 }
             }
         }
@@ -181,10 +185,12 @@ namespace Keel.Utils.Debug
 
             try
             {
+                // Flushed before the file check, so the console gets the last logs even without file output.
+                FlushLogQueue();
+
                 if (_fileWriter == null)
                     return;
 
-                FlushLogQueue();
                 if (_logQueueBuffer.Length > 0)
                     _fileBuffer.Append(_logQueueBuffer);
 

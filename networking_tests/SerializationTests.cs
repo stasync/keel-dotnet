@@ -1,4 +1,7 @@
-﻿namespace Keel.Networking.Tests
+﻿using Keel.Utils.Debug;
+using System.Collections.Concurrent;
+
+namespace Keel.Networking.Tests
 {
     public class SerializationTests
     {
@@ -509,6 +512,99 @@
             Assert.Equal(ulong.MinValue, reader.ReadUInt64());
             Assert.Equal(float.MinValue, reader.ReadSingle());
             Assert.Equal(double.MinValue, reader.ReadDouble());
+        }
+
+        [Fact]
+        public void NetWriter_PositionPast32KB()
+        {
+            var writer = new NetWriter();
+            var data = new byte[40_000];
+            writer.WriteBytes(data, data.Length);
+
+            Assert.Equal(data.Length, writer.Position);
+            Assert.Equal(data.Length, writer.AsArraySegment().Count);
+        }
+
+        [Fact]
+        public void NetWriter_StringTooLongForLengthPrefix_Throws()
+        {
+            var writer = new NetWriter();
+
+            // The length prefix is a ushort - a longer string can't be described by it.
+            Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteString(new string('a', ushort.MaxValue + 1)));
+            Assert.Equal(0, writer.Position);
+        }
+
+        [Fact]
+        public void NetWriter_LongestString_RoundTrips()
+        {
+            var value = new string('a', ushort.MaxValue);
+
+            var writer = new NetWriter();
+            writer.WriteString(value);
+
+            var reader = new NetReader(writer);
+            Assert.Equal(value, reader.ReadString());
+        }
+
+        [Fact]
+        public void NetWriter_WriteBytesAndSize_NullArray_WritesEmpty()
+        {
+            var writer = new NetWriter();
+            writer.WriteBytesAndSize((byte[])null);
+
+            var reader = new NetReader(writer);
+            Assert.Empty(reader.ReadBytesAndSize());
+        }
+
+        [Fact]
+        public void NetBuffer_GrowsFromEmptyArray()
+        {
+            // Growing multiplies the current length, which never gets anywhere from zero.
+            var write = Task.Run(() =>
+            {
+                var buffer = new NetBuffer(Array.Empty<byte>());
+                buffer.WriteByte(1);
+                return buffer.Position;
+            });
+
+            Assert.True(write.Wait(TimeSpan.FromSeconds(5)), "Writing to a buffer over an empty array never finished.");
+            Assert.Equal(1, write.Result);
+        }
+
+        [Fact]
+        public void NetBuffer_DataThatFitsExactly_DoesNotGrow()
+        {
+            var buffer = new NetBuffer(new byte[4]);
+            buffer.WriteByte4(1, 2, 3, 4);
+
+            Assert.Equal(4, buffer.Length);
+        }
+
+        [Fact]
+        public void NetBuffer_GrowingPastWarningSizeInOneStep_Warns()
+        {
+            var warnings = new ConcurrentQueue<string>();
+
+            void OnLogReceived(LogLevel level, string message)
+            {
+                if (level == LogLevel.Warning && message.Contains(typeof(NetBuffer).FullName!))
+                    warnings.Enqueue(message);
+            }
+
+            Logger.LogReceivedThreaded += OnLogReceived;
+            try
+            {
+                // A single growth step takes the buffer from 2000 bytes straight past the 2048 byte warning size.
+                var buffer = new NetBuffer(new byte[2000]);
+                buffer.WriteBytes(new byte[2001], srcOffset: 0, count: 2001);
+            }
+            finally
+            {
+                Logger.LogReceivedThreaded -= OnLogReceived;
+            }
+
+            Assert.NotEmpty(warnings);
         }
 
         private struct Float3Blittable : IEquatable<Float3Blittable>

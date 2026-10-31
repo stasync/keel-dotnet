@@ -91,6 +91,10 @@ namespace Keel.Utils
                     s_stableHashCodeToType.Add(type.GetStableHashCode(), type);
                 }
 
+                // Checked before the indices are assigned - past the limit the byte casts below wrap around.
+                if (s_value.Count > byte.MaxValue)
+                    throw new InvalidOperationException($"Too many child types ({s_value.Count}) for '{typeof(TParent).FullName}'. Maximum is '{byte.MaxValue}'.");
+
                 s_value.Sort(comparison: (type0, type1) =>
                     type0.GetStableHashCode().CompareTo(type1.GetStableHashCode()));
 
@@ -99,9 +103,6 @@ namespace Keel.Utils
                     s_stableHashCodeToIndex.Add(s_value[i].GetStableHashCode(), (byte)i);
                     s_indexToType.Add((byte)i, s_value[i]);
                 }
-
-                if (s_value.Count > byte.MaxValue)
-                    throw new InvalidOperationException($"Too many child types ({s_value.Count}) for '{typeof(TParent).FullName}'. Maximum is '{byte.MaxValue}'.");
             }
 
             public static bool WithHashCode(int hashCode, out Type componentType) =>

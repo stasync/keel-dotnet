@@ -89,11 +89,8 @@ namespace Keel.Networking.Udp.LowLevel
 
             private readonly EndPointData[] _value;
 
-            internal EndPointDataByDeliveryMethod()
-            {
-                var enumValueCount = Enum.GetNames(typeof(DeliveryMethod)).Length;
-                _value = new EndPointData[enumValueCount];
-            }
+            internal EndPointDataByDeliveryMethod() =>
+                _value = new EndPointData[s_deliveryMethodCount];
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal EndPointData Get(DeliveryMethod deliveryMethod) =>
@@ -285,6 +282,8 @@ namespace Keel.Networking.Udp.LowLevel
         /// </summary>
         private const double ENDPOINT_SWEEP_INTERVAL_MS = UdpTransport.MAX_RESEND_DURATION_MS;
 
+        private static readonly int s_deliveryMethodCount = Enum.GetNames(typeof(DeliveryMethod)).Length;
+
         public int ReliabilityFailureCount =>
             _transport.ReliabilityFailureCount;
 
@@ -318,6 +317,13 @@ namespace Keel.Networking.Udp.LowLevel
 
             while (_transport.TryDequeueIncoming(out var incomingData))
             {
+                // The transport accepts all of its channels, but only the ones a delivery method maps to exist here.
+                if (incomingData.Channel >= s_deliveryMethodCount)
+                {
+                    FailedToProcessDatagram(incomingData.EndPoint);
+                    continue;
+                }
+
                 var endPointData = _trackedEndPoints.Get(incomingData);
                 endPointData.TryProcess(incomingData, _incomingPayloadQueue);
             }

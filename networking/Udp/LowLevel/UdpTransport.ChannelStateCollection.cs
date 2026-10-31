@@ -170,7 +170,8 @@ namespace Keel.Networking.Udp.LowLevel
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal void ReleasePendingOutgoingDatagram(uint uid, byte channel) =>
-                _state[channel].ReleasePendingOutgoingDatagram(uid);
+                // No state means nothing was ever sent on the channel, so the ack has nothing to release.
+                _state[channel]?.ReleasePendingOutgoingDatagram(uid);
 
             internal void Clear()
             {

@@ -92,5 +92,16 @@
             foreach (var url in urls)
                 Assert.False(Utils.IsValidUrl(url));
         }
+
+        [Fact]
+        public void CombineKeepsCallerArray()
+        {
+            var urlParts = new[] { "http://172.123.12.24:2355/", "/webhooks/", "/connected" };
+            var originalUrlParts = (string[])urlParts.Clone();
+
+            Utils.CombineUrl(urlParts);
+
+            Assert.Equal(originalUrlParts, urlParts);
+        }
     }
 }

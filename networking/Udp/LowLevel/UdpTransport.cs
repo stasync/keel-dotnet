@@ -46,6 +46,11 @@ namespace Keel.Networking.Udp.LowLevel
         /// </summary>
         private const double MAX_RESEND_DELAY_MS = 1000;
 
+        /// <summary>
+        /// How many channels each endpoint has. Channel 0 is unreliable, the rest are reliable.
+        /// </summary>
+        private const int CHANNEL_COUNT = 8;
+
         public event Action<IPEndPoint> FailedToProcessDatagram = delegate { };
 
         public int ReliabilityFailureCount { get; private set; }
@@ -133,12 +138,13 @@ namespace Keel.Networking.Udp.LowLevel
 
                 var senderIpEndPoint = (IPEndPoint)senderEndPoint;
 
+                // Checked before the layering pipeline, so traffic that is dropped anyway costs no processing.
+                if (IsBlacklisted(senderIpEndPoint.Address))
+                    continue;
+
                 // Making an initial data slice and pass it through to the layering pipeline.
                 var receivedDataSegment = new ArraySegment<byte>(_incomingBuffer, offset: 0, count: received);
                 _dataTransferLayerPipeline?.ProcessIncomingData(senderIpEndPoint, ref receivedDataSegment);
-
-                if (IsBlacklisted(senderIpEndPoint.Address))
-                    continue;
 
                 if (_incomingPacketSimulationPipeline != null)
                 {
@@ -204,6 +210,13 @@ namespace Keel.Networking.Udp.LowLevel
 
             var datagramUid = datagramUidAsBytes.UInt;
 
+            // The channel indexes the per channel state, so a value from the wire has to be checked before it's used.
+            if (channel >= CHANNEL_COUNT)
+            {
+                FailedToProcessDatagram(senderIpEndPoint);
+                return;
+            }
+
             switch (datagramType)
             {
                 case DatagramType.Payload:
@@ -229,6 +242,12 @@ namespace Keel.Networking.Udp.LowLevel
                     {
                         // Ack is always received on the unreliable channel 0, so the channel of the acknowledged datagram is read from the payload.
                         // Look at SendAckTo_Internal() for clarifications.
+                        if (data.Count <= protocolOffset || data[protocolOffset] >= CHANNEL_COUNT)
+                        {
+                            FailedToProcessDatagram(senderIpEndPoint);
+                            return;
+                        }
+
                         var originalChannel = data[protocolOffset];
 
                         // Release pending packets.

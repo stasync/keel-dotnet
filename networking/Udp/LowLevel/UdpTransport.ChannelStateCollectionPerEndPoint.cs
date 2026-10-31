@@ -24,7 +24,7 @@ namespace Keel.Networking.Udp.LowLevel
             internal uint ProcessOutgoingDatagram(IPEndPoint endPoint, byte channel, ArraySegment<byte> data)
             {
                 if (!_value.TryGetValue(endPoint, out var channelStateCollection))
-                    _value.Add(endPoint, channelStateCollection = new ChannelStateCollection(endPoint, channelCount: 8, _resendRequired, _reliabilityFailure));
+                    _value.Add(endPoint, channelStateCollection = new ChannelStateCollection(endPoint, channelCount: CHANNEL_COUNT, _resendRequired, _reliabilityFailure));
 
                 return channelStateCollection.ProcessOutgoingDatagram(channel, data);
             }
