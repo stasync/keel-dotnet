@@ -558,7 +558,7 @@ namespace Keel.Networking.Tests
         }
 
         [Fact]
-        public void NetBuffer_GrowsFromEmptyArray()
+        public async Task NetBuffer_GrowsFromEmptyArray()
         {
             // Growing multiplies the current length, which never gets anywhere from zero.
             var write = Task.Run(() =>
@@ -568,8 +568,9 @@ namespace Keel.Networking.Tests
                 return buffer.Position;
             });
 
-            Assert.True(write.Wait(TimeSpan.FromSeconds(5)), "Writing to a buffer over an empty array never finished.");
-            Assert.Equal(1, write.Result);
+            // A write that never finishes fails the test with a TimeoutException, instead of hanging the run.
+            var position = await write.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.Equal(1, position);
         }
 
         [Fact]

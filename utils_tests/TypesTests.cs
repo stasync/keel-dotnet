@@ -13,7 +13,7 @@
         }
 
         [Fact]
-        public void IsBlittable_ConcurrentFirstCalls_DoNotThrow()
+        public async Task IsBlittable_ConcurrentFirstCalls_DoNotThrow()
         {
             // Types nothing has asked about yet, so every call below goes on to fill the cache.
             var valueTypes = typeof(int).Assembly.GetTypes()
@@ -32,7 +32,7 @@
                 }, TaskCreationOptions.LongRunning))
                 .ToArray();
 
-            Task.WaitAll(threads);
+            await Task.WhenAll(threads);
         }
     }
 }
