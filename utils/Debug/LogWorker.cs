@@ -58,10 +58,9 @@ namespace Keel.Utils.Debug
                     var currentProcess = Process.GetCurrentProcess();
                     var logPath = Path.Combine(fullLogOutputPath, $"app_{currentProcess.Id}.log");
 
-                    // FileStream with a large buffer and async option; wrap in BufferedStream and StreamWriter for efficient writes.
-                    var fileStream = new FileStream(logPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, bufferSize: ushort.MaxValue, useAsync: true);
-                    var buffered = new BufferedStream(fileStream, bufferSize: ushort.MaxValue);
-                    _fileWriter = new StreamWriter(buffered, Encoding.UTF8) { AutoFlush = false };
+                    // Logs are already batched in _fileBuffer and written from the worker thread, so a plain synchronous stream is enough.
+                    var fileStream = new FileStream(logPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, bufferSize: ushort.MaxValue);
+                    _fileWriter = new StreamWriter(fileStream, Encoding.UTF8) { AutoFlush = false };
 
                     _lastFlushTime = DateTime.UtcNow;
                 }

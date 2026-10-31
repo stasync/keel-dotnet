@@ -21,7 +21,7 @@ namespace Keel.Networking.Udp.LowLevel.Internal
         private static readonly ArrayPool<byte> s_pool = ArrayPool<byte>.Create();
 
         /// <summary>
-        /// Rents a buffer from the pool and copies data. 
+        /// Rents a buffer from the pool and copies data.
         /// IMPORTANT: Caller MUST call Release() to return the buffer to the pool.
         /// </summary>
         internal static ArraySegment<byte> Rent(in ArraySegment<byte> src)

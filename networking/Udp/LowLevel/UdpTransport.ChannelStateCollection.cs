@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace Keel.Networking.Udp.LowLevel
 {
-    public partial class UdpTransport
+    public sealed partial class UdpTransport
     {
         internal sealed class ChannelStateCollection
         {

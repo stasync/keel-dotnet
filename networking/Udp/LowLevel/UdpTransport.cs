@@ -22,7 +22,7 @@ namespace Keel.Networking.Udp.LowLevel
         ///
         /// Expressed as a duration rather than an attempt count on purpose: with the growing resend delay
         /// below, a fixed number of attempts would mean a give up window that silently moves whenever those
-        /// delays are returned.
+        /// delays are retuned.
         ///
         /// This is also the source for <see cref="ReliableUdpServer.HEARTBEAT_TIMEOUT_MS"/> - there is no
         /// point retransmitting for longer than the connection above would survive without a heartbeat.
@@ -163,7 +163,7 @@ namespace Keel.Networking.Udp.LowLevel
                 // Update the simulation pipeline.
                 _incomingPacketSimulationPipeline.Update();
 
-                // Dequeue all incoming packets from the simulation pipeline. 
+                // Dequeue all incoming packets from the simulation pipeline.
                 while (_incomingPacketSimulationPipeline.TryDequeuePacket(out (byte[] data, IPEndPoint sender) packet))
                 {
                     // No need to copy data here, as the data we get from the queue was already copied (when it was added to the queue).
@@ -175,7 +175,7 @@ namespace Keel.Networking.Udp.LowLevel
         private void ProcessIncomingData(IPEndPoint senderIpEndPoint, in ArraySegment<byte> data)
         {
             if (data.Count == 0)
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"Empty datagram received from '{senderIpEndPoint}'.");
 
             // Validate minimum packet size to prevent overflow when reading protocol header.
             if (data.Count < _protocolHeaderSize)
@@ -213,13 +213,8 @@ namespace Keel.Networking.Udp.LowLevel
                         if (channel > 0)
                             SendAckTo_Internal(senderIpEndPoint, datagramUid, channel);
 
-                        // Validate payload size to prevent overflow.
+                        // Never negative - the datagram was checked against the header size above.
                         var payloadSize = data.Count - protocolOffset;
-                        if (payloadSize < 0)
-                        {
-                            FailedToProcessDatagram(senderIpEndPoint);
-                            return;
-                        }
 
                         // Create a payload instance. We have to copy the data here as it is unknown when the data will be consumed (from the incoming queue by the consumer).
                         var payload = new byte[payloadSize];

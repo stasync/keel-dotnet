@@ -1,4 +1,5 @@
 ﻿using Keel.Networking.Udp.LowLevel;
+using Keel.Utils.Debug;
 using System;
 using System.Net;
 using System.Runtime.CompilerServices;
@@ -6,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace Keel.Networking.Udp
 {
     /// <summary>
-    ///  A high level client based on <see cref="UdpProtocol"/>.
+    /// A high level client based on <see cref="UdpProtocol"/>.
     /// </summary>
     public sealed class ReliableUdpClient
     {
@@ -68,13 +69,13 @@ namespace Keel.Networking.Udp
             if (_connectionState != null)
             {
                 // Already connected.
-                Keel.Utils.Debug.Logger.LogError("Already connected.");
+                Logger.LogError("Already connected.");
                 return;
             }
 
             if (_protocol != null)
             {
-                Keel.Utils.Debug.Logger.LogError("Already connecting.");
+                Logger.LogError("Already connecting.");
                 return;
             }
 
@@ -94,7 +95,7 @@ namespace Keel.Networking.Udp
 
             if (!IsConnected)
             {
-                Keel.Utils.Debug.Logger.LogError("Unable to send data: not connected yet.");
+                Logger.LogError("Unable to send data: not connected yet.");
                 return;
             }
 
@@ -164,7 +165,7 @@ namespace Keel.Networking.Udp
             if (currentDelta.TotalMilliseconds < ReliableUdpServer.HEARTBEAT_TIMEOUT_MS)
                 return;
 
-            Keel.Utils.Debug.Logger.LogError($"[{GetType().FullName}] UpdateHeartbeat error: {currentDelta.TotalMilliseconds}ms");
+            Logger.LogError($"[{GetType().FullName}] UpdateHeartbeat error: {currentDelta.TotalMilliseconds}ms");
             Disconnect();
         }
 
@@ -181,7 +182,7 @@ namespace Keel.Networking.Udp
             catch (Exception e)
             {
                 // Discard the offending datagram and keep the update loop alive.
-                Keel.Utils.Debug.Logger.LogError($"[{GetType().FullName}] MALFORMED DATAGRAM from '{incomingDataSnapshot.EndPoint}' discarded: {e.Message}");
+                Logger.LogError($"[{GetType().FullName}] MALFORMED DATAGRAM from '{incomingDataSnapshot.EndPoint}' discarded: {e.Message}");
             }
         }
 
@@ -212,7 +213,7 @@ namespace Keel.Networking.Udp
                     break;
 
                 case ServerMessageCodes.Heartbeat:
-                    // Add the connection for entry point if it not exists.
+                    // Refresh the heartbeat timeout.
                     if (_connectionState != null)
                         _connectionState.LastHeartbeatReceiveTime = DateTime.UtcNow;
 

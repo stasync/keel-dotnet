@@ -1,4 +1,4 @@
-namespace Keel.DependencyInjection.Interface
+﻿namespace Keel.DependencyInjection.Interface
 {
     public interface IScopeListener
     {

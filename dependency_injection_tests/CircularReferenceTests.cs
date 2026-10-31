@@ -1,4 +1,4 @@
-#pragma warning disable CS0169 // Field is never used
+﻿#pragma warning disable CS0169 // Field is never used
 namespace Keel.DependencyInjection.Tests
 {
     public class CircularReferenceTests

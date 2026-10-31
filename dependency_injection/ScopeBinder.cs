@@ -1,4 +1,4 @@
-using Keel.DependencyInjection.Factories;
+﻿using Keel.DependencyInjection.Factories;
 using Keel.DependencyInjection.Factories.Internal;
 using System;
 using System.Collections.Generic;
@@ -15,16 +15,16 @@ namespace Keel.DependencyInjection
         private readonly Dictionary<Type, ImplementationBehaviour> _implementationBehaviourTypeMap = new();
 
         /// <summary>
-        /// Binds <typeparam name="TInterface"></typeparam> to it's default implementation, defined via <see cref="DefaultImplementationAttribute"/>.
-        /// NOTE: <typeparam name="TInterface"></typeparam> hast to be decorated with <see cref="DefaultImplementationAttribute"/>.
+        /// Binds <typeparamref name="TInterface"/> to its default implementation, defined via <see cref="DefaultImplementationAttribute"/>.
+        /// NOTE: <typeparamref name="TInterface"/> has to be decorated with <see cref="DefaultImplementationAttribute"/>.
         /// </summary>
         public void BindToDefaultImplementation<TInterface>(ImplementationBehaviour behaviour = ImplementationBehaviour.Singleton)
             where TInterface : class =>
             BindToDefaultImplementation(typeof(TInterface), behaviour);
 
         /// <summary>
-        /// Binds <param name="interfaceType"></param> to it's default implementation, defined via <see cref="DefaultImplementationAttribute"/>.
-        /// NOTE: <param name="interfaceType"></param> hast to be decorated with <see cref="DefaultImplementationAttribute"/>.
+        /// Binds <paramref name="interfaceType"/> to its default implementation, defined via <see cref="DefaultImplementationAttribute"/>.
+        /// NOTE: <paramref name="interfaceType"/> has to be decorated with <see cref="DefaultImplementationAttribute"/>.
         /// </summary>
         public void BindToDefaultImplementation(Type interfaceType, ImplementationBehaviour behaviour = ImplementationBehaviour.Singleton)
         {
@@ -45,14 +45,14 @@ namespace Keel.DependencyInjection
         }
 
         /// <summary>
-        /// Binds <typeparam name="TImplementation"></typeparam> to itself.
+        /// Binds <typeparamref name="TImplementation"/> to itself.
         /// </summary>
         public void BindToSelf<TImplementation>(ImplementationBehaviour behaviour = ImplementationBehaviour.Singleton)
             where TImplementation : class =>
             BindToSelf<TImplementation, DefaultFactory>(behaviour);
 
         /// <summary>
-        /// Binds <typeparam name="TImplementation"></typeparam> to itself using specific factory <typeparam name="TFactory"></typeparam>.
+        /// Binds <typeparamref name="TImplementation"/> to itself using specific factory <typeparamref name="TFactory"/>.
         /// </summary>
         public void BindToSelf<TImplementation, TFactory>(ImplementationBehaviour behaviour = ImplementationBehaviour.Singleton)
             where TImplementation : class
@@ -60,14 +60,14 @@ namespace Keel.DependencyInjection
             Bind<TImplementation, TImplementation, TFactory>(behaviour);
 
         /// <summary>
-        /// Binds <typeparam name="TImplementation"></typeparam> to all the interfaces it implements.
+        /// Binds <typeparamref name="TImplementation"/> to all the interfaces it implements.
         /// </summary>
         public void BindToAllImplementedInterfaces<TImplementation>(ImplementationBehaviour behaviour = ImplementationBehaviour.Singleton)
             where TImplementation : class =>
             BindToAllImplementedInterfaces<TImplementation, DefaultFactory>(behaviour);
 
         /// <summary>
-        /// Binds <typeparam name="TImplementation"></typeparam> to all the interfaces it implements using specific factory <typeparam name="TFactory"></typeparam>.
+        /// Binds <typeparamref name="TImplementation"/> to all the interfaces it implements using specific factory <typeparamref name="TFactory"/>.
         /// </summary>
         public void BindToAllImplementedInterfaces<TImplementation, TFactory>(ImplementationBehaviour behaviour = ImplementationBehaviour.Singleton)
             where TImplementation : class
@@ -79,7 +79,7 @@ namespace Keel.DependencyInjection
         }
 
         /// <summary>
-        /// Binds <typeparam name="TImplementation"></typeparam> to <typeparam name="TInterface"></typeparam>.
+        /// Binds <typeparamref name="TImplementation"/> to <typeparamref name="TInterface"/>.
         /// </summary>
         public void Bind<TInterface, TImplementation>(ImplementationBehaviour behaviour = ImplementationBehaviour.Singleton)
             where TInterface : class
@@ -87,7 +87,7 @@ namespace Keel.DependencyInjection
             Bind<TInterface, TImplementation, DefaultFactory>(behaviour);
 
         /// <summary>
-        /// Binds <typeparam name="TImplementation"></typeparam> to <typeparam name="TInterface"></typeparam> using specific factory <typeparam name="TFactory"></typeparam>.
+        /// Binds <typeparamref name="TImplementation"/> to <typeparamref name="TInterface"/> using specific factory <typeparamref name="TFactory"/>.
         /// </summary>
         public void Bind<TInterface, TImplementation, TFactory>(ImplementationBehaviour behaviour = ImplementationBehaviour.Singleton)
             where TInterface : class
@@ -96,8 +96,8 @@ namespace Keel.DependencyInjection
             BindInternal(typeof(TInterface), typeof(TImplementation), typeof(TFactory), behaviour);
 
         /// <summary>
-        /// Binds <typeparam name="TImplementation"></typeparam> to <typeparam name="TInterface"></typeparam>.
-        /// Allows to delegate <param name="instanceProvider"></param> as a factory.
+        /// Binds <typeparamref name="TImplementation"/> to <typeparamref name="TInterface"/>.
+        /// Allows to delegate <paramref name="instanceProvider"/> as a factory.
         /// </summary>
         public void Bind<TInterface, TImplementation>(Func<TImplementation> instanceProvider, ImplementationBehaviour behaviour = ImplementationBehaviour.Singleton)
             where TInterface : class
@@ -107,7 +107,7 @@ namespace Keel.DependencyInjection
 
         /// <summary>
         /// Low level explicit binding function.
-        /// Should only be used if its required to bind using raw types, for instance, via reflection - for any other means, use generic (type - constrained) functions instead.
+        /// Should only be used if it's required to bind using raw types, for instance, via reflection - for any other means, use generic (type - constrained) functions instead.
         /// </summary>
         public void Bind(Type interfaceType, Type implementationType, Type factoryType, ImplementationBehaviour behaviour)
         {
@@ -144,7 +144,7 @@ namespace Keel.DependencyInjection
             if (_factories.ContainsKey(implementationType))
                 return;
 
-            if (implementationType.IsInterface || implementationType.IsAbstract | implementationType.IsGenericType)
+            if (implementationType.IsInterface || implementationType.IsAbstract || implementationType.IsGenericType)
                 throw new InvalidOperationException($"Implementation of type '{implementationType.FullName}' couldn't be interface, static, abstract, or generic.");
 
             if (!interfaceType.IsAssignableFrom(implementationType))
@@ -160,7 +160,7 @@ namespace Keel.DependencyInjection
                 throw new InvalidOperationException($"Factory of type '{factoryType!.FullName}' should be inherited for '{factoryBaseType.FullName}'.");
 
             if (Activator.CreateInstance(factoryType, args) is not InstanceFactory factory)
-                throw new InvalidOperationException($"Unable to build factory for of type '{factoryType.FullName}'.");
+                throw new InvalidOperationException($"Unable to build factory of type '{factoryType.FullName}'.");
 
             return factory;
         }
@@ -171,9 +171,9 @@ namespace Keel.DependencyInjection
         /// This allows to perform the following:
         /// 1. Create binderA.
         /// 2. Create scopeA with binderA.
-        /// 3. Modify the binderA
-        /// 2. Create scopeB with binderA.
-        /// Changes that has been done in '3' won't affect scopeA.
+        /// 3. Modify the binderA.
+        /// 4. Create scopeB with binderA.
+        /// Changes that have been done in '3' won't affect scopeA.
         /// </summary>
         public ScopeDependencyMap ToDependencyMap() =>
             new(factories: new Dictionary<Type, InstanceFactory>(_factories),

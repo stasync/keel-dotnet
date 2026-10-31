@@ -256,10 +256,10 @@ namespace Keel.Networking
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ArraySegment<byte> ReadBytesNoAlloc(int count)
+        public ArraySegment<byte> ReadBytesNonAlloc(int count)
         {
             if (count < 0)
-                throw new IndexOutOfRangeException($"{nameof(ReadBytesNoAlloc)} '{count}' is out of range.");
+                throw new IndexOutOfRangeException($"{nameof(ReadBytesNonAlloc)} '{count}' is out of range.");
 
             return _buffer.ReadBytesAsArraySegment(count);
         }
@@ -275,7 +275,7 @@ namespace Keel.Networking
         public ArraySegment<byte> ReadBytesAndSizeNonAlloc()
         {
             var size = ReadUInt16();
-            return size == 0 ? new ArraySegment<byte>(Array.Empty<byte>()) : ReadBytesNoAlloc(size);
+            return size == 0 ? new ArraySegment<byte>(Array.Empty<byte>()) : ReadBytesNonAlloc(size);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

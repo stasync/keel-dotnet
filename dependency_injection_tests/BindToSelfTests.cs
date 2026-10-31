@@ -1,4 +1,4 @@
-namespace Keel.DependencyInjection.Tests
+﻿namespace Keel.DependencyInjection.Tests
 {
     public class BindToSelfTests
     {

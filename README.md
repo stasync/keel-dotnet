@@ -18,7 +18,7 @@ To build from source instead, you need the [.NET 10 SDK](https://dotnet.microsof
 
 ```bash
 git clone git@github.com:stasync/keel-dotnet.git
-cd keel
+cd keel-dotnet
 sh build.sh
 ```
 

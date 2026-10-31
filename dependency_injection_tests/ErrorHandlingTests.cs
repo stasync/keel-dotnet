@@ -1,4 +1,4 @@
-#pragma warning disable CS0414 // Field is assigned but its value is never used
+﻿#pragma warning disable CS0414 // Field is assigned but its value is never used
 using Keel.DependencyInjection.Interface;
 
 namespace Keel.DependencyInjection.Tests

@@ -65,7 +65,7 @@ namespace Keel.Networking
         {
             var size = sizeof(T);
             if (Position + size > InternalBuffer.Length)
-                throw new IndexOutOfRangeException($"{nameof(ReadBytes)} out of range: ({size}): {ToString()}");
+                throw new IndexOutOfRangeException($"{nameof(ReadUnmanaged)} out of range: ({size}): {ToString()}");
 
             var result = default(T);
 
@@ -169,7 +169,7 @@ namespace Keel.Networking
         private void EnsureEnoughSpaceToAdd(int sizeToAdd)
         {
             if (sizeToAdd < 0)
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"Size to add cannot be negative: '{sizeToAdd}'.");
 
             if (Position + sizeToAdd < InternalBuffer.Length)
                 return;

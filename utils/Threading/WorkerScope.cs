@@ -1,4 +1,4 @@
-namespace Keel.Utils.Threading
+﻿namespace Keel.Utils.Threading
 {
     public enum WorkerScope
     {

@@ -226,35 +226,13 @@ namespace Keel.Networking.Udp
 
                     case ClientMessageCodes.Heartbeat:
                         {
-                            var connectionUid = _dataReader.ReadPackedUInt32();
-                            var validationUid = _dataReader.ReadPackedUInt32();
-                            var connectionSlot = _dataReader.ReadByte();
-
-                            var connection = _connectionSlots[connectionSlot];
-                            if (connection == null)
-                            {
-                                if (!_recentDisconnectsLookup.ContainsKey(connectionUid))
-                                    UnexpectedClientAction(incomingDataSnapshot.EndPoint, $"Unexpected data - connection '{connectionUid}' is not yet registered: '{messageCode}'");
-
+                            if (!TryReadConnection(incomingDataSnapshot.EndPoint, messageCode, out var connection))
                                 break;
-                            }
-
-                            if (connection.Uid != connectionUid || connection.ValidationUid != validationUid)
-                            {
-                                UnexpectedClientAction(incomingDataSnapshot.EndPoint, $"Unexpected data - connection '{connectionUid}' doesn't match the slot '{connectionSlot}': '{messageCode}'");
-                                break;
-                            }
-
-                            if (!incomingDataSnapshot.EndPoint.Equals(connection.EndPoint))
-                            {
-                                UnexpectedClientAction(incomingDataSnapshot.EndPoint, $"Unexpected data - connection '{connection.Uid}' is now arriving from '{incomingDataSnapshot.EndPoint}' but stays pinned to '{connection.EndPoint}'. Outgoing data keeps targeting the pinned address, so this client may stop receiving while still appearing connected");
-                                break;
-                            }
 
                             // Update heartbeat.
                             connection.LastHeartbeatTime = DateTime.UtcNow;
 
-                            // Add the connection for entry point if it not exists.
+                            // Answer, so the client knows the connection is still alive.
                             _dataWriter.SeekZero();
                             _dataWriter.WriteByte((byte)ReliableUdpClient.ServerMessageCodes.Heartbeat);
 
@@ -265,30 +243,8 @@ namespace Keel.Networking.Udp
 
                     case ClientMessageCodes.Data:
                         {
-                            var connectionUid = _dataReader.ReadPackedUInt32();
-                            var validationUid = _dataReader.ReadPackedUInt32();
-                            var connectionSlot = _dataReader.ReadByte();
-
-                            var connection = _connectionSlots[connectionSlot];
-                            if (connection == null)
-                            {
-                                if (!_recentDisconnectsLookup.ContainsKey(connectionUid))
-                                    UnexpectedClientAction(incomingDataSnapshot.EndPoint, $"Unexpected data - connection '{connectionUid}' is not yet registered: '{messageCode}'");
-
+                            if (!TryReadConnection(incomingDataSnapshot.EndPoint, messageCode, out var connection))
                                 break;
-                            }
-
-                            if (connection.Uid != connectionUid || connection.ValidationUid != validationUid)
-                            {
-                                UnexpectedClientAction(incomingDataSnapshot.EndPoint, $"Unexpected data - connection '{connectionUid}' doesn't match the slot '{connectionSlot}': '{messageCode}'");
-                                break;
-                            }
-
-                            if (!incomingDataSnapshot.EndPoint.Equals(connection.EndPoint))
-                            {
-                                UnexpectedClientAction(incomingDataSnapshot.EndPoint, $"Unexpected data - connection '{connection.Uid}' is now arriving from '{incomingDataSnapshot.EndPoint}' but stays pinned to '{connection.EndPoint}'. Outgoing data keeps targeting the pinned address, so this client may stop receiving while still appearing connected");
-                                break;
-                            }
 
                             var payload = _dataReader.ReadBytesAndSize();
                             DataReceived(connection.Uid, payload, (UdpProtocol.DeliveryMethod)incomingDataSnapshot.Channel);
@@ -305,6 +261,43 @@ namespace Keel.Networking.Udp
                 Logger.LogException(e);
                 UnexpectedClientAction(incomingDataSnapshot.EndPoint, e.Message);
             }
+        }
+
+        /// <summary>
+        /// Reads the connection header (uid, validation uid, slot) of a client message and finds the connection it belongs to.
+        /// Reports a header that doesn't match a registered connection via <see cref="UnexpectedClientAction"/>.
+        /// </summary>
+        private bool TryReadConnection(IPEndPoint sender, ClientMessageCodes messageCode, out Connection connection)
+        {
+            connection = null;
+
+            var connectionUid = _dataReader.ReadPackedUInt32();
+            var validationUid = _dataReader.ReadPackedUInt32();
+            var connectionSlot = _dataReader.ReadByte();
+
+            var slotConnection = _connectionSlots[connectionSlot];
+            if (slotConnection == null)
+            {
+                if (!_recentDisconnectsLookup.ContainsKey(connectionUid))
+                    UnexpectedClientAction(sender, $"Unexpected data - connection '{connectionUid}' is not yet registered: '{messageCode}'");
+
+                return false;
+            }
+
+            if (slotConnection.Uid != connectionUid || slotConnection.ValidationUid != validationUid)
+            {
+                UnexpectedClientAction(sender, $"Unexpected data - connection '{connectionUid}' doesn't match the slot '{connectionSlot}': '{messageCode}'");
+                return false;
+            }
+
+            if (!sender.Equals(slotConnection.EndPoint))
+            {
+                UnexpectedClientAction(sender, $"Unexpected data - connection '{slotConnection.Uid}' is now arriving from '{sender}' but stays pinned to '{slotConnection.EndPoint}'. Outgoing data keeps targeting the pinned address, so this client may stop receiving while still appearing connected");
+                return false;
+            }
+
+            connection = slotConnection;
+            return true;
         }
 
         private void UpdateConnectionHeartbeats()

@@ -72,11 +72,11 @@ namespace Keel.Utils
                     // ReSharper disable once NullableWarningSuppressionIsUsed
                     if (!typeToParse!.IsPrimitive)
                     {
-                        Logger.LogError($"Field '{field.FieldType.FullName}:{field.Name}' is a type of array, but it's only primitive types are supported to be parsed for arrays.");
+                        Logger.LogError($"Field '{field.FieldType.FullName}:{field.Name}' is an array, but only arrays of primitive types are supported.");
                         continue;
                     }
 
-                    // Crate a new array.
+                    // Create a new array.
                     var arrayInstance = (Array)Activator.CreateInstance(typeToParse.MakeArrayType(), parameterList.Count);
 
                     // Fill up new array - parsing values one by one.
@@ -107,13 +107,13 @@ namespace Keel.Utils
                     // Sanity check.
                     if (targetValueType == null)
                     {
-                        Logger.LogError($"Error while injecting to field '{field.FieldType.FullName}:{field.Name}' as it's unable to to determine underlying type.");
+                        Logger.LogError($"Error while injecting to field '{field.FieldType.FullName}:{field.Name}' as it's unable to determine the underlying type.");
                         continue;
                     }
 
                     // Warning - array expected (?).
                     if (parameterList.Count > 1)
-                        Logger.LogWarning($"Array is expected for '{targetValueType.FullName}:{field.Name}', as there are '{parameterList.Count}' corresponded arguments.");
+                        Logger.LogWarning($"Array is expected for '{targetValueType.FullName}:{field.Name}', as there are '{parameterList.Count}' corresponding arguments.");
 
                     // Just grab the first parameter in this case.
                     var parameter = parameterList[0];
@@ -180,10 +180,10 @@ namespace Keel.Utils
 
                 if (typeToParse == typeof(ulong))
                 {
-                    // Check for long.
-                    if (ulong.TryParse(argument, out var parsedLong))
+                    // Check for ulong.
+                    if (ulong.TryParse(argument, out var parsedULong))
                     {
-                        result = parsedLong;
+                        result = parsedULong;
                         return true;
                     }
                 }
@@ -194,7 +194,7 @@ namespace Keel.Utils
                     return true;
                 }
 
-                // Check if any other numeric as a fallback. 
+                // Fall back to parsing any other numeric type.
                 if (double.TryParse(argument, out var parsedDouble))
                 {
                     var convertedValue = Convert.ChangeType(parsedDouble, typeToParse);
@@ -229,7 +229,7 @@ namespace Keel.Utils
                     if (!result.TryGetValue(command, out var argumentList))
                         result.Add(command, argumentList = new List<string>());
 
-                    // 'Contains' is fine to have here, as it always only 1 or few arguments per command.
+                    // 'Contains' is fine here, as there are only one or a few arguments per command.
                     if (!argumentList.Contains(argument))
                         argumentList.Add(argument);
                 }

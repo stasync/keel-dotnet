@@ -19,10 +19,10 @@ namespace Keel.Networking.Udp.LowLevel.Internal
             try
             {
                 if (data.Array == null)
-                    throw new NullReferenceException();
+                    throw new ArgumentNullException(nameof(data), "Data array cannot be null.");
 
                 if (data.Count > MtuBuffer.SIZE)
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException($"Datagram size '{data.Count}' exceeds the MTU buffer size '{MtuBuffer.SIZE}'.");
 
                 socket.SendTo(data.Array, data.Offset, data.Count, SocketFlags.None, endPoint);
             }
@@ -41,10 +41,10 @@ namespace Keel.Networking.Udp.LowLevel.Internal
             try
             {
                 if (buffer == null)
-                    throw new NullReferenceException();
+                    throw new ArgumentNullException(nameof(buffer));
 
                 if (buffer.Length > MtuBuffer.SIZE)
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException($"Buffer size '{buffer.Length}' exceeds the MTU buffer size '{MtuBuffer.SIZE}'.");
 
                 return socket.ReceiveFrom(buffer, SocketFlags.None, ref endPoint);
             }

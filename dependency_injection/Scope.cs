@@ -1,4 +1,4 @@
-using Keel.DependencyInjection.Diagnostics;
+﻿using Keel.DependencyInjection.Diagnostics;
 using Keel.DependencyInjection.Interface;
 using Keel.DependencyInjection.Internal;
 using System;
@@ -56,7 +56,7 @@ namespace Keel.DependencyInjection
                 // Cache context instances.
                 var resolvingContext = _rootScope.DependencyResolvingContext;
 
-                // Clean up resolving context - it should be able for user to resolve from the 'OnResolved' function. 
+                // Clean up the resolving context, so the user is able to resolve from the 'OnResolved' function.
                 _rootScope.DependencyResolvingContext = null;
 
                 // Look for all instances that may listen for OnResolved callback.
@@ -82,11 +82,11 @@ namespace Keel.DependencyInjection
 
             // Sanity check.
             if (!_dependencyMap.Factories.TryGetValue(implementationType, out var factory))
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"Factory is not registered for implementation '{implementationType.FullName}'.");
 
             // Sanity check.
             if (!_dependencyMap.ImplementationBehaviourTypeMap.TryGetValue(implementationType, out var behaviourType))
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"Behaviour is not registered for implementation '{implementationType.FullName}'.");
 
             // Process different behaviors.
             switch (behaviourType)
@@ -95,7 +95,7 @@ namespace Keel.DependencyInjection
                 case ImplementationBehaviour.Transient:
                     return ProduceAndResolve();
 
-                // For Singleton behavior, trying to access an existed instance, create a new one if it's not yet created.
+                // For Singleton behavior, trying to access an existing instance, create a new one if it's not yet created.
                 case ImplementationBehaviour.Singleton:
                     {
                         // Create new singleton instance, if it's not yet created.
@@ -116,7 +116,7 @@ namespace Keel.DependencyInjection
                 // https://stackoverflow.com/Questions/2420193/how-to-avoid-dependency-injection-constructor-madness
                 var instance = factory.Produce();
                 if (instance == null)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException($"Factory produced null for implementation '{implementationType.FullName}'.");
 
                 // Resolve the instance.
                 var instanceType = instance.GetType();

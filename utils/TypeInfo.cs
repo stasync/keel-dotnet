@@ -26,7 +26,7 @@ namespace Keel.Utils
             s_blittableValueCache.Add(type, isBlittable);
             return isBlittable;
 
-            // A quick checking though pinning, should sometimes help to avoid recursion.
+            // A quick check through pinning, should sometimes help to avoid recursion.
             bool CheckThroughPinnedHandle()
             {
                 if (!type.IsValueType)
@@ -96,7 +96,7 @@ namespace Keel.Utils
     }
 
     /// <summary>
-    /// An API that holds the information about <typeparam name="T"></typeparam> type.
+    /// An API that holds the information about <typeparamref name="T"/> type.
     /// </summary>
     public static class TypeInfo<T>
     {

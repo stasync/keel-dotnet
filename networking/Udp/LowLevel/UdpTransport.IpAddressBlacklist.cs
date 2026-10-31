@@ -8,7 +8,7 @@ namespace Keel.Networking.Udp.LowLevel
     public sealed partial class UdpTransport
     {
         /// <summary>
-        /// Keeps temporary banned/restricted (for what ever reason) ip addresses.
+        /// Keeps temporarily banned/restricted (for whatever reason) IP addresses.
         /// Used to filter out the traffic if remote address sends incorrect/corrupted data.
         /// </summary>
         private sealed class IpAddressBlacklist

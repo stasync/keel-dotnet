@@ -58,7 +58,7 @@ namespace Keel.Utils.Math
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string String(int length) =>
-            String(format: "abcdefghijklmnopqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ0123456789", length);
+            String(format: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", length);
 
         public string String(string format, int length)
         {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net;
 
 namespace Keel.Networking.Udp.LowLevel.Internal
@@ -13,7 +13,7 @@ namespace Keel.Networking.Udp.LowLevel.Internal
         internal DatagramSnapshot(uint uid, IPEndPoint endPoint, ArraySegment<byte> data, byte channel)
         {
             if (data.Count > MtuBuffer.SIZE)
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"Datagram size '{data.Count}' exceeds the MTU buffer size '{MtuBuffer.SIZE}'.");
 
             Uid = uid;
             EndPoint = endPoint;

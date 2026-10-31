@@ -37,7 +37,7 @@ namespace Keel.Utils.Threading
 
                 var elapsed = worker.ElapsedSinceLastUpdate();
                 if (elapsed.TotalSeconds > _secondsTimeStep)
-                    WriteLogToFile($"WORKER WARNING: Worker '{worker.Name}' has potential dead lock, elapsed {elapsed.TotalMilliseconds}ms");
+                    WriteLogToFile($"WORKER WARNING: Worker '{worker.Name}' has a potential deadlock, elapsed {elapsed.TotalMilliseconds}ms");
             }
         }
 

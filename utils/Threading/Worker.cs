@@ -65,7 +65,7 @@ namespace Keel.Utils.Threading
             lock (_locker)
             {
                 if (_started)
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException("Already started.");
 
                 _started = true;
             }
