@@ -195,9 +195,8 @@ namespace Keel.Utils
                     return true;
                 }
 
-                // Fall back to parsing any other numeric type.
-                // Invariant culture: a command line reads the same on every machine, '0.5' is never five.
-                if (double.TryParse(argument, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var parsedDouble))
+                // Fall back to parsing any other numeric type - invariant, so '0.5' reads the same on every machine.
+                if (double.TryParse(argument, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedDouble))
                 {
                     var convertedValue = Convert.ChangeType(parsedDouble, typeToParse, CultureInfo.InvariantCulture);
                     result = convertedValue;

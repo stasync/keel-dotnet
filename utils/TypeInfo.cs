@@ -24,8 +24,6 @@ namespace Keel.Utils
                 return result;
 
             var isBlittable = CheckThroughPinnedHandle() && IsTypeBlittableRecursive(type);
-
-            // Another thread may have just cached the same type - with the same result, so either one may stay.
             s_blittableValueCache.TryAdd(type, isBlittable);
             return isBlittable;
 

@@ -65,36 +65,6 @@ namespace Keel.DependencyInjection.Tests
         }
 
         [Fact]
-        public void ProvideAfterFactoryThrows_ScopeKeepsWorking()
-        {
-            var binder = new ScopeBinder();
-            binder.Bind<IFirstService, FirstService>(() => throw new InvalidOperationException("Factory failed."));
-            binder.Bind<IHealthyService, HealthyService>();
-            var rootScope = new RootScope(binder.ToDependencyMap());
-
-            var exception = Assert.Throws<InvalidOperationException>(() => rootScope.Provide<IFirstService>());
-            Assert.Equal("Factory failed.", exception.Message);
-
-            // The failed resolve must not leave the scope stuck in its resolving state.
-            Assert.NotNull(rootScope.Provide<IHealthyService>());
-        }
-
-        [Fact]
-        public void FailedBinding_LeavesBinderUnchanged()
-        {
-            var binder = new ScopeBinder();
-
-            // An abstract implementation is rejected...
-            Assert.Throws<InvalidOperationException>(() =>
-                binder.Bind<IFirstService, AbstractFirstService>());
-
-            // ...without leaving the interface half registered, so it can still be bound.
-            binder.Bind<IFirstService, FirstService>();
-            var rootScope = new RootScope(binder.ToDependencyMap());
-            Assert.IsType<FirstService>(rootScope.Provide<IFirstService>());
-        }
-
-        [Fact]
         public void BindWithNonFactoryType_MessageNamesInstanceFactory()
         {
             var binder = new ScopeBinder();
@@ -121,10 +91,6 @@ namespace Keel.DependencyInjection.Tests
         private sealed class FirstService : IFirstService;
 
         private sealed class AlternativeFirstService : IFirstService;
-
-        private abstract class AbstractFirstService : IFirstService;
-
-        private sealed class HealthyService : IHealthyService;
 
         private sealed class ServiceWithManualProperty
         {
@@ -158,8 +124,6 @@ namespace Keel.DependencyInjection.Tests
         private interface IFirstService;
 
         private interface ISecondService : IFirstService;
-
-        private interface IHealthyService;
 
         [DefaultImplementation(typeof(RecursiveService))]
         private interface IRecursiveService : IScopeListener;

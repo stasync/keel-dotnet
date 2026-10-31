@@ -180,10 +180,8 @@ namespace Keel.Networking.Udp.LowLevel
 
         private void ProcessIncomingData(IPEndPoint senderIpEndPoint, in ArraySegment<byte> data)
         {
-            if (data.Count == 0)
-                throw new InvalidOperationException($"Empty datagram received from '{senderIpEndPoint}'.");
-
             // Validate minimum packet size to prevent overflow when reading protocol header.
+            // This also covers an empty datagram, which a data transfer layer may leave behind.
             if (data.Count < _protocolHeaderSize)
             {
                 FailedToProcessDatagram(senderIpEndPoint);

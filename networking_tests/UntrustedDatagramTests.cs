@@ -1,4 +1,5 @@
-﻿using Keel.Networking.Udp;
+﻿using Keel.Networking.Tests.DataTransferLayers;
+using Keel.Networking.Udp;
 using Keel.Networking.Udp.LowLevel;
 using System.Buffers.Binary;
 using System.Net;
@@ -97,6 +98,22 @@ namespace Keel.Networking.Tests
             PollUntil(_protocol.Poll, () => false, millisecondsTimeout: 200);
 
             Assert.Equal(0, _protocolFailureCount);
+        }
+
+        [Fact]
+        public void DatagramEmptiedByDataTransferLayerIsRejected()
+        {
+            var prefixLayer = new PrefixDataTransferLayer();
+            _protocol.RegisterDataTransferLayer(prefixLayer);
+
+            // What the layer sends for an empty message: the prefix alone, which it strips again on the way in.
+            var datagram = new ArraySegment<byte>([]);
+            prefixLayer.ProcessOutgoingData(targetEndPoint: null, ref datagram);
+            SendRaw(_protocolPort, datagram.ToArray());
+
+            PollUntil(_protocol.Poll, () => _protocolFailureCount > 0);
+
+            Assert.Equal(1, _protocolFailureCount);
         }
 
         [Fact]

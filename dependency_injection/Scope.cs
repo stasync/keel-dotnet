@@ -48,22 +48,16 @@ namespace Keel.DependencyInjection
             if (_rootScope.DependencyResolvingContext != null)
                 throw new InvalidOperationException($"Unable to provide implementation for '{interfaceType.FullName}' while dependency tree is the resolving context. Use '{nameof(IScopeListener)}.{nameof(IScopeListener.OnResolved)}' instead.");
 
-            using (var resolvingContext = new DependencyResolvingContext())
+            using (_rootScope.DependencyResolvingContext = new DependencyResolvingContext())
             {
-                _rootScope.DependencyResolvingContext = resolvingContext;
+                // Calling provide (recursive) to create an instance and resolve all the dependencies.
+                var instance = ProvideDependency(interfaceType);
 
-                object instance;
-                try
-                {
-                    // Calling provide (recursive) to create an instance and resolve all the dependencies.
-                    instance = ProvideDependency(interfaceType);
-                }
-                finally
-                {
-                    // Clean up the resolving context, so the user is able to resolve from the 'OnResolved' function.
-                    // Also when resolving throws - otherwise the scope would refuse every later call as a nested one.
-                    _rootScope.DependencyResolvingContext = null;
-                }
+                // Cache context instances.
+                var resolvingContext = _rootScope.DependencyResolvingContext;
+
+                // Clean up the resolving context, so the user is able to resolve from the 'OnResolved' function.
+                _rootScope.DependencyResolvingContext = null;
 
                 // Look for all instances that may listen for OnResolved callback.
                 foreach (var contextInstance in resolvingContext.GetAllContextInstances())
@@ -177,21 +171,12 @@ namespace Keel.DependencyInjection
             if (_disposed)
                 return;
 
-            // Marked first, so the children disposed below don't remove themselves from the list being iterated.
-            _disposed = true;
-
-            foreach (var childScope in _childScopes)
+            // A copy, as each child removes itself from the list when disposed.
+            foreach (var childScope in _childScopes.ToArray())
                 childScope.Dispose();
 
-            _childScopes.Clear();
-            _parentScope?.OnChildScopeDisposed(this);
-        }
-
-        private void OnChildScopeDisposed(Scope childScope)
-        {
-            // A parent that is being disposed itself clears the whole list anyway.
-            if (!_disposed)
-                _childScopes.Remove(childScope);
+            _parentScope?._childScopes.Remove(this);
+            _disposed = true;
         }
     }
 }

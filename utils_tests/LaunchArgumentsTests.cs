@@ -24,6 +24,17 @@ namespace Keel.Utils.Tests
             }
         }
 
+        [Fact]
+        public void CreateInstance_RejectsCommaInFractions()
+        {
+            // The invariant culture has no decimal comma, and reading the comma as a thousands separator would turn '0,5' into 5.
+            var arguments = new Dictionary<string, List<string>> { ["ratio"] = ["0,5"] };
+            var settings = LaunchArguments.CreateInstance<Settings>(arguments);
+
+            // Left at its default - the value is rejected and logged rather than silently read wrong.
+            Assert.Equal(-1f, settings.Ratio);
+        }
+
         private sealed class Settings
         {
             [InjectCommandArgument("ratio")] public float Ratio = -1f;

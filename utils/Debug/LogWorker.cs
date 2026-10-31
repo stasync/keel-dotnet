@@ -153,9 +153,7 @@ namespace Keel.Utils.Debug
                         // Swallow exceptions during dispose.
                     }
 
-                    // Null disables file logging from here on, so neither the failure nor the buffered output for it keeps piling up.
                     _fileWriter = null;
-                    _fileBuffer.Clear();
                 }
             }
         }

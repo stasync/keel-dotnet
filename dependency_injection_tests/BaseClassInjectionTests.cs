@@ -46,6 +46,26 @@
             Assert.NotNull(service.OwnDependency);
         }
 
+        [Fact]
+        public void Provide_InjectsOverriddenPropertyOnce()
+        {
+            var createdDependencyCount = 0;
+            var binder = new ScopeBinder();
+            binder.Bind<IDependency, Dependency>(() =>
+            {
+                createdDependencyCount++;
+                return new Dependency();
+            }, ImplementationBehaviour.Transient);
+            binder.BindToSelf<DerivedWithOverriddenProperty>();
+            var rootScope = new RootScope(binder.ToDependencyMap());
+
+            var service = rootScope.Provide<DerivedWithOverriddenProperty>();
+
+            // The base property and its override are one property, so it takes one dependency - not one per backing field.
+            Assert.NotNull(service.Dependency);
+            Assert.Equal(1, createdDependencyCount);
+        }
+
         private sealed class Dependency : IDependency;
 
         private class BaseWithPrivateField
@@ -71,6 +91,17 @@
         }
 
         private sealed class DerivedFromAutoProperty : BaseWithAutoProperty;
+
+        private class BaseWithVirtualProperty
+        {
+            [Inject]
+            public virtual IDependency Dependency { get; } = null;
+        }
+
+        private sealed class DerivedWithOverriddenProperty : BaseWithVirtualProperty
+        {
+            public override IDependency Dependency { get; } = null;
+        }
 
         private interface IDependency;
     }

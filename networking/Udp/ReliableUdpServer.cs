@@ -283,8 +283,8 @@ namespace Keel.Networking.Udp
                 return false;
             }
 
-            var slotConnection = _connectionSlots[connectionSlot];
-            if (slotConnection == null)
+            connection = _connectionSlots[connectionSlot];
+            if (connection == null)
             {
                 if (!_recentDisconnectsLookup.ContainsKey(connectionUid))
                     UnexpectedClientAction(sender, $"Unexpected data - connection '{connectionUid}' is not yet registered: '{messageCode}'");
@@ -292,19 +292,18 @@ namespace Keel.Networking.Udp
                 return false;
             }
 
-            if (slotConnection.Uid != connectionUid || slotConnection.ValidationUid != validationUid)
+            if (connection.Uid != connectionUid || connection.ValidationUid != validationUid)
             {
                 UnexpectedClientAction(sender, $"Unexpected data - connection '{connectionUid}' doesn't match the slot '{connectionSlot}': '{messageCode}'");
                 return false;
             }
 
-            if (!sender.Equals(slotConnection.EndPoint))
+            if (!sender.Equals(connection.EndPoint))
             {
-                UnexpectedClientAction(sender, $"Unexpected data - connection '{slotConnection.Uid}' is now arriving from '{sender}' but stays pinned to '{slotConnection.EndPoint}'. Outgoing data keeps targeting the pinned address, so this client may stop receiving while still appearing connected");
+                UnexpectedClientAction(sender, $"Unexpected data - connection '{connection.Uid}' is now arriving from '{sender}' but stays pinned to '{connection.EndPoint}'. Outgoing data keeps targeting the pinned address, so this client may stop receiving while still appearing connected");
                 return false;
             }
 
-            connection = slotConnection;
             return true;
         }
 
